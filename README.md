@@ -104,7 +104,7 @@ A full example could be:
           orientation : "landscape", // Android only (portrait|landscape), default unset so it rotates with the device
           disableAnimations : true, // iOS
           disableSuccessBeep: false, // iOS and Android
-          continuosMode: false // Android
+          continuousMode: false // Android
       }
    );
 ```
