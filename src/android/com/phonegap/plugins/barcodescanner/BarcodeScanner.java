@@ -21,13 +21,17 @@ import android.content.pm.PackageManager;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.content.Context;
-import android.support.v4.content.LocalBroadcastManager;
+import android.view.HapticFeedbackConstants;
+import android.view.View;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.PluginResult;
 import org.apache.cordova.PermissionHelper;
 
+import com.google.android.gms.vision.barcode.Barcode;
 import com.google.zxing.client.android.CaptureActivity;
 import com.google.zxing.client.android.encode.EncodeActivity;
 import com.google.zxing.client.android.Intents;
@@ -51,6 +55,7 @@ public class BarcodeScanner extends CordovaPlugin {
     private static final String ORIENTATION = "orientation";
     private static final String SHOW_FLIP_CAMERA_BUTTON = "showFlipCameraButton";
     private static final String CONTINUOUS_MODE = "continuousMode";
+    private static final String VIBRATION_FEEDBACK = "vibrationFeedback";
     private static final String RESULTDISPLAY_DURATION = "resultDisplayDuration";
     private static final String SHOW_TORCH_BUTTON = "showTorchButton";
     private static final String TORCH_ON = "torchOn";
@@ -189,6 +194,9 @@ public class BarcodeScanner extends CordovaPlugin {
                         intentScan.putExtra(Intents.Scan.TORCH_ON, obj.optBoolean(TORCH_ON, false));
                         intentScan.putExtra(Intents.Scan.SAVE_HISTORY, obj.optBoolean(SAVE_HISTORY, false));
                         boolean beep = obj.optBoolean(DISABLE_BEEP, false);
+                        boolean isContinuous = obj.optBoolean(CONTINUOUS_MODE, false);
+                        boolean vibrationFeedback = obj.optBoolean(VIBRATION_FEEDBACK, false);
+
                         intentScan.putExtra(Intents.Scan.BEEP_ON_SCAN, !beep);
                         if (obj.has(RESULTDISPLAY_DURATION)) {
                             intentScan.putExtra(Intents.Scan.RESULT_DISPLAY_DURATION_MS, "" + obj.optLong(RESULTDISPLAY_DURATION));
@@ -203,7 +211,7 @@ public class BarcodeScanner extends CordovaPlugin {
                             intentScan.putExtra(Intents.Scan.ORIENTATION_LOCK, obj.optString(ORIENTATION));
                         }
 
-                        boolean isContinuous = obj.optBoolean(CONTINUOUS_MODE, false);
+
                         if (isContinuous) {
                             intentScan.putExtra(Intents.Scan.BULK_SCAN, true);
                             BarcodeScanner.this.continuousModeBroadcastReceiver = new BroadcastReceiver() {
@@ -217,6 +225,7 @@ public class BarcodeScanner extends CordovaPlugin {
                                     } catch (JSONException e) {
                                         Log.d(LOG_TAG, "This should never happen");
                                     }
+                                    if (vibrationFeedback) BarcodeScanner.this.vibrate();
                                     PluginResult result = new PluginResult(PluginResult.Status.OK, obj);
                                     result.setKeepCallback(true);
                                     callbackContext.sendPluginResult(result);
@@ -263,7 +272,9 @@ public class BarcodeScanner extends CordovaPlugin {
                 } catch (JSONException e) {
                     Log.d(LOG_TAG, "This should never happen");
                 }
-                //this.success(new PluginResult(PluginResult.Status.OK, obj), this.callback);
+
+                boolean vibrationFeedback = obj.optBoolean(VIBRATION_FEEDBACK, false);
+                if (vibrationFeedback) BarcodeScanner.this.vibrate();
                 this.callbackContext.success(obj);
             } else if (resultCode == Activity.RESULT_CANCELED) {
                 JSONObject obj = new JSONObject();
@@ -364,6 +375,17 @@ public class BarcodeScanner extends CordovaPlugin {
      */
     public void onRestoreStateForActivityResult(Bundle state, CallbackContext callbackContext) {
         this.callbackContext = callbackContext;
+    }
+
+    private void vibrate() {
+        final CordovaPlugin that = this;
+
+        View view = that.cordova.getActivity().getWindow().getDecorView();
+        view.setHapticFeedbackEnabled(true);
+        view.performHapticFeedback(
+                HapticFeedbackConstants.VIRTUAL_KEY,
+                HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING  // Ignore device's setting. Otherwise, you can use FLAG_IGNORE_VIEW_SETTING to ignore view's setting.
+        );
     }
 
 }
