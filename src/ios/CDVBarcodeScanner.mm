@@ -481,7 +481,7 @@ parentViewController:(UIViewController*)parentViewController
     AVCaptureSession* captureSession = [[AVCaptureSession alloc] init];
     self.captureSession = captureSession;
 
-       AVCaptureDevice* __block device = nil;
+    AVCaptureDevice* __block device = nil;
     if (self.isFrontCamera) {
 
         NSArray* devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
@@ -491,9 +491,16 @@ parentViewController:(UIViewController*)parentViewController
             }
         }];
     } else {
-        device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-        if (!device) return @"unable to obtain video capture device";
+        NSArray<AVCaptureDeviceType> *deviceTypes = @[
+            AVCaptureDeviceTypeBuiltInTripleCamera,
+            AVCaptureDeviceTypeBuiltInDualWideCamera,
+            AVCaptureDeviceTypeBuiltInDualCamera,
+            AVCaptureDeviceTypeBuiltInWideAngleCamera,
+        ];
+        AVCaptureDeviceDiscoverySession *discoverySession = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack];
+        device = discoverySession.devices.firstObject;
 
+        if (!device) return @"unable to obtain video capture device";
     }
 
     // set focus params if available to improve focusing
