@@ -8,6 +8,8 @@
  */
 package com.phonegap.plugins.barcodescanner;
 
+import java.util.Arrays;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,6 +52,7 @@ public class BarcodeScanner extends CordovaPlugin {
     private static final String TEXT = "text";
     private static final String DATA = "data";
     private static final String TYPE = "type";
+    private static final String RAW_BYTES = "rawBytes";
     private static final String PREFER_FRONTCAMERA = "preferFrontCamera";
     private static final String ORIENTATION = "orientation";
     private static final String SHOW_FLIP_CAMERA_BUTTON = "showFlipCameraButton";
@@ -58,6 +61,7 @@ public class BarcodeScanner extends CordovaPlugin {
     private static final String RESULTDISPLAY_DURATION = "resultDisplayDuration";
     private static final String SHOW_TORCH_BUTTON = "showTorchButton";
     private static final String TORCH_ON = "torchOn";
+    private static final String ASSUME_GS1 = "assumeGS1";
     private static final String SAVE_HISTORY = "saveHistory";
     private static final String DISABLE_BEEP = "disableSuccessBeep";
     private static final String FORMATS = "formats";
@@ -191,6 +195,7 @@ public class BarcodeScanner extends CordovaPlugin {
                         intentScan.putExtra(Intents.Scan.SHOW_FLIP_CAMERA_BUTTON, obj.optBoolean(SHOW_FLIP_CAMERA_BUTTON, false));
                         intentScan.putExtra(Intents.Scan.SHOW_TORCH_BUTTON, obj.optBoolean(SHOW_TORCH_BUTTON, false));
                         intentScan.putExtra(Intents.Scan.TORCH_ON, obj.optBoolean(TORCH_ON, false));
+                        intentScan.putExtra("ASSUME_GS1", obj.optBoolean(ASSUME_GS1, false));
                         intentScan.putExtra(Intents.Scan.SAVE_HISTORY, obj.optBoolean(SAVE_HISTORY, false));
                         boolean beep = obj.optBoolean(DISABLE_BEEP, false);
                         boolean isContinuous = obj.optBoolean(CONTINUOUS_MODE, false);
@@ -220,6 +225,7 @@ public class BarcodeScanner extends CordovaPlugin {
                                     try {
                                         obj.put(TEXT, intent.getStringExtra(Intents.Scan.RESULT));
                                         obj.put(FORMAT, intent.getStringExtra(Intents.Scan.RESULT_FORMAT));
+                                        obj.put(RAW_BYTES, Arrays.toString(intent.getByteArrayExtra("SCAN_RESULT_BYTES")));
                                         obj.put(CANCELLED, false);
                                     } catch (JSONException e) {
                                         Log.d(LOG_TAG, "This should never happen");
@@ -267,6 +273,7 @@ public class BarcodeScanner extends CordovaPlugin {
                 try {
                     obj.put(TEXT, intent.getStringExtra("SCAN_RESULT"));
                     obj.put(FORMAT, intent.getStringExtra("SCAN_RESULT_FORMAT"));
+                    obj.put(RAW_BYTES, Arrays.toString(intent.getByteArrayExtra("SCAN_RESULT_BYTES")));
                     obj.put(CANCELLED, false);
                 } catch (JSONException e) {
                     Log.d(LOG_TAG, "This should never happen");
