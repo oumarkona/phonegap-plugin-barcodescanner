@@ -53,6 +53,7 @@
 @property (nonatomic, retain) UIViewController*           parentViewController;
 @property (nonatomic, retain) CDVbcsViewController*        viewController;
 @property (nonatomic, retain) AVCaptureSession*           captureSession;
+@property (nonatomic, assign) CGFloat                     currentZoomLevel;
 @property (nonatomic, retain) AVCaptureVideoPreviewLayer* previewLayer;
 @property (nonatomic, retain) NSString*                   alternateXib;
 @property (nonatomic, retain) NSMutableArray*             results;
@@ -111,6 +112,7 @@
 - (void)shutterButtonPressed;
 - (IBAction)cancelButtonPressed:(id)sender;
 - (IBAction)flipCameraButtonPressed:(id)sender;
+- (IBAction)zoomButtonPressed:(id)sender;
 - (IBAction)torchButtonPressed:(id)sender;
 
 @end
@@ -461,6 +463,37 @@ parentViewController:(UIViewController*)parentViewController
     }];
 }
 
+- (void)zoom {
+    if (self.currentZoomLevel == 2.0) {
+      self.currentZoomLevel = 1.0;
+    } else if (self.currentZoomLevel == 1.0) {
+      self.currentZoomLevel = 2.0;
+    }
+
+    NSArray<AVCaptureDeviceType> *deviceTypes;
+    if (self.currentZoomLevel == 1.0) {
+        deviceTypes = @[AVCaptureDeviceTypeBuiltInUltraWideCamera];
+    } else if (self.currentZoomLevel == 2.0) {
+        deviceTypes = @[AVCaptureDeviceTypeBuiltInWideAngleCamera, AVCaptureDeviceTypeBuiltInUltraWideCamera];
+    }
+
+    AVCaptureDeviceDiscoverySession *discoverySession = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack];
+
+    NSError *error = nil;
+    self.currentDevice =  discoverySession.devices.firstObject;
+    AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:self.currentDevice error:nil];
+    if (input) {
+        [self.captureSession beginConfiguration];
+        [self.captureSession removeInput:self.captureSession.inputs.firstObject];
+        [self.captureSession addInput:input];
+        [self.captureSession commitConfiguration];
+    } else {
+        NSLog(@"Error creating device input");
+    }
+
+}
+
+
 - (void)toggleTorch {
   AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
   [device lockForConfiguration:nil];
@@ -492,13 +525,14 @@ parentViewController:(UIViewController*)parentViewController
         }];
     } else {
         NSArray<AVCaptureDeviceType> *deviceTypes = @[
+            AVCaptureDeviceTypeBuiltInWideAngleCamera,
             AVCaptureDeviceTypeBuiltInTripleCamera,
             AVCaptureDeviceTypeBuiltInDualWideCamera,
             AVCaptureDeviceTypeBuiltInDualCamera,
-            AVCaptureDeviceTypeBuiltInWideAngleCamera,
         ];
         AVCaptureDeviceDiscoverySession *discoverySession = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack];
         device = discoverySession.devices.firstObject;
+        self.currentZoomLevel = 2.0;
 
         if (!device) return @"unable to obtain video capture device";
     }
@@ -832,6 +866,11 @@ parentViewController:(UIViewController*)parentViewController
     [self.processor performSelector:@selector(flipCamera) withObject:nil afterDelay:0];
 }
 
+- (IBAction)zoomButtonPressed:(id)sender
+{
+    [self.processor performSelector:@selector(zoom) withObject:nil afterDelay:0];
+}
+
 - (IBAction)torchButtonPressed:(id)sender
 {
   [self.processor performSelector:@selector(toggleTorch) withObject:nil afterDelay:0];
@@ -897,6 +936,12 @@ parentViewController:(UIViewController*)parentViewController
                        action:@selector(flipCameraButtonPressed:)
                        ];
 
+    id zoom = [[UIBarButtonItem alloc]
+                       initWithBarButtonSystemItem:UIBarButtonSystemItemSearch
+                       target:(id)self
+                       action:@selector(zoomButtonPressed:)
+                       ];
+
     NSMutableArray *items;
 
 #if USE_SHUTTER
@@ -907,15 +952,15 @@ parentViewController:(UIViewController*)parentViewController
                         ];
 
     if (_processor.isShowFlipCameraButton) {
-      items = [NSMutableArray arrayWithObjects:flexSpace, cancelButton, flexSpace, flipCamera, shutterButton, nil];
+      items = [NSMutableArray arrayWithObjects:flexSpace, cancelButton, flexSpace, zoom, flipCamera, shutterButton, nil];
     } else {
-      items = [NSMutableArray arrayWithObjects:flexSpace, cancelButton, flexSpace, shutterButton, nil];
+      items = [NSMutableArray arrayWithObjects:flexSpace, cancelButton, flexSpace, zoom, shutterButton, nil];
     }
 #else
     if (_processor.isShowFlipCameraButton) {
-      items = [@[flexSpace, cancelButton, flexSpace, flipCamera] mutableCopy];
+      items = [@[flexSpace, cancelButton, flexSpace, zoom, flipCamera] mutableCopy];
     } else {
-      items = [@[flexSpace, cancelButton, flexSpace] mutableCopy];
+      items = [@[flexSpace, cancelButton, flexSpace, zoom] mutableCopy];
     }
 #endif
 
