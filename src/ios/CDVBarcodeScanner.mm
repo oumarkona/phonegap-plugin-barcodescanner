@@ -62,6 +62,7 @@
 @property (nonatomic)         BOOL                        is2D;
 @property (nonatomic)         BOOL                        capturing;
 @property (nonatomic)         BOOL                        isFrontCamera;
+@property (nonatomic)         BOOL                        preferWideLens;
 @property (nonatomic)         BOOL                        isShowFlipCameraButton;
 @property (nonatomic)         BOOL                        isShowTorchButton;
 @property (nonatomic)         BOOL                        isFlipped;
@@ -169,6 +170,7 @@
     }
 
     BOOL preferFrontCamera = [options[@"preferFrontCamera"] boolValue];
+    BOOL preferWideLens = [options[@"preferWideLens"] boolValue];
     BOOL showFlipCameraButton = [options[@"showFlipCameraButton"] boolValue];
     BOOL showTorchButton = [options[@"showTorchButton"] boolValue];
     BOOL disableAnimations = [options[@"disableAnimations"] boolValue];
@@ -201,6 +203,10 @@
 
     if (preferFrontCamera) {
       processor.isFrontCamera = true;
+    }
+
+    if (preferWideLens) {
+      processor.preferWideLens = true;
     }
 
     if (showFlipCameraButton) {
@@ -472,16 +478,26 @@ parentViewController:(UIViewController*)parentViewController
 
     NSArray<AVCaptureDeviceType> *deviceTypes;
     if (self.currentZoomLevel == 1.0) {
-        deviceTypes = @[AVCaptureDeviceTypeBuiltInUltraWideCamera];
+      deviceTypes = @[
+          AVCaptureDeviceTypeBuiltInUltraWideCamera, // ultra wide
+          AVCaptureDeviceTypeBuiltInWideAngleCamera,
+          AVCaptureDeviceTypeBuiltInTripleCamera,
+          AVCaptureDeviceTypeBuiltInDualWideCamera,
+          AVCaptureDeviceTypeBuiltInDualCamera
+      ];
     } else if (self.currentZoomLevel == 2.0) {
-        deviceTypes = @[AVCaptureDeviceTypeBuiltInWideAngleCamera, AVCaptureDeviceTypeBuiltInUltraWideCamera];
+        deviceTypes = @[
+            AVCaptureDeviceTypeBuiltInWideAngleCamera, // standard
+            AVCaptureDeviceTypeBuiltInTripleCamera,
+            AVCaptureDeviceTypeBuiltInDualWideCamera,
+            AVCaptureDeviceTypeBuiltInDualCamera,
+        ];
     }
 
     AVCaptureDeviceDiscoverySession *discoverySession = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack];
 
     NSError *error = nil;
-    self.currentDevice =  discoverySession.devices.firstObject;
-    AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:self.currentDevice error:nil];
+    AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:discoverySession.devices.firstObject error:nil];
     if (input) {
         [self.captureSession beginConfiguration];
         [self.captureSession removeInput:self.captureSession.inputs.firstObject];
@@ -523,8 +539,9 @@ parentViewController:(UIViewController*)parentViewController
                 device = obj;
             }
         }];
-    } else {
-        NSArray<AVCaptureDeviceType> *deviceTypes = @[
+    } else if (self.preferWideLens) {
+       NSArray<AVCaptureDeviceType> *deviceTypes = @[
+            AVCaptureDeviceTypeBuiltInUltraWideCamera, // ultra wide
             AVCaptureDeviceTypeBuiltInWideAngleCamera,
             AVCaptureDeviceTypeBuiltInTripleCamera,
             AVCaptureDeviceTypeBuiltInDualWideCamera,
@@ -532,10 +549,19 @@ parentViewController:(UIViewController*)parentViewController
         ];
         AVCaptureDeviceDiscoverySession *discoverySession = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack];
         device = discoverySession.devices.firstObject;
+        self.currentZoomLevel = 1.0;
+    } else {
+        NSArray<AVCaptureDeviceType> *deviceTypes = @[
+            AVCaptureDeviceTypeBuiltInWideAngleCamera, // standard
+            AVCaptureDeviceTypeBuiltInTripleCamera,
+            AVCaptureDeviceTypeBuiltInDualWideCamera,
+            AVCaptureDeviceTypeBuiltInDualCamera,
+        ];
+        AVCaptureDeviceDiscoverySession *discoverySession = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack];
+        device = discoverySession.devices.firstObject;
         self.currentZoomLevel = 2.0;
-
-        if (!device) return @"unable to obtain video capture device";
     }
+    if (!device) return @"unable to obtain video capture device";
 
     // set focus params if available to improve focusing
     [device lockForConfiguration:&error];
