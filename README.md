@@ -1,6 +1,6 @@
 # fttx
 
-After updating src/android/barcodescanner-release-xxxxxx.aar replace the file name in the  following files:
+After updating `src/android/barcodescanner-release-xxxxxx.aar` replace the file name in the following files:
 
 - plugin.xml
 - barcodescanner.gradle
