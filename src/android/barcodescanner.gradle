@@ -6,7 +6,7 @@ repositories{
 }
 
 dependencies {
-    compile(name:'barcodescanner-release-zxing-3.5.3', ext:'aar')
+    compile(name:'barcodescanner-release-zxing-3.5.4', ext:'aar')
 }
 
 android {
