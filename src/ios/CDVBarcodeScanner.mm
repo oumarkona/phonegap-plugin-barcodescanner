@@ -478,20 +478,9 @@ parentViewController:(UIViewController*)parentViewController
 
     NSArray<AVCaptureDeviceType> *deviceTypes;
     if (self.currentZoomLevel == 1.0) {
-      deviceTypes = @[
-          AVCaptureDeviceTypeBuiltInUltraWideCamera, // ultra wide
-          AVCaptureDeviceTypeBuiltInWideAngleCamera,
-          AVCaptureDeviceTypeBuiltInTripleCamera,
-          AVCaptureDeviceTypeBuiltInDualWideCamera,
-          AVCaptureDeviceTypeBuiltInDualCamera
-      ];
+      deviceTypes = [self getDeviceTypes:YES];
     } else if (self.currentZoomLevel == 2.0) {
-        deviceTypes = @[
-            AVCaptureDeviceTypeBuiltInWideAngleCamera, // standard
-            AVCaptureDeviceTypeBuiltInTripleCamera,
-            AVCaptureDeviceTypeBuiltInDualWideCamera,
-            AVCaptureDeviceTypeBuiltInDualCamera,
-        ];
+      deviceTypes = [self getDeviceTypes:NO];
     }
 
     AVCaptureDeviceDiscoverySession *discoverySession = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack];
@@ -540,23 +529,12 @@ parentViewController:(UIViewController*)parentViewController
             }
         }];
     } else if (self.preferWideLens) {
-       NSArray<AVCaptureDeviceType> *deviceTypes = @[
-            AVCaptureDeviceTypeBuiltInUltraWideCamera, // ultra wide
-            AVCaptureDeviceTypeBuiltInWideAngleCamera,
-            AVCaptureDeviceTypeBuiltInTripleCamera,
-            AVCaptureDeviceTypeBuiltInDualWideCamera,
-            AVCaptureDeviceTypeBuiltInDualCamera,
-        ];
+       NSArray<AVCaptureDeviceType> *deviceTypes = [self getDeviceTypes:YES];
         AVCaptureDeviceDiscoverySession *discoverySession = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack];
         device = discoverySession.devices.firstObject;
         self.currentZoomLevel = 1.0;
     } else {
-        NSArray<AVCaptureDeviceType> *deviceTypes = @[
-            AVCaptureDeviceTypeBuiltInWideAngleCamera, // standard
-            AVCaptureDeviceTypeBuiltInTripleCamera,
-            AVCaptureDeviceTypeBuiltInDualWideCamera,
-            AVCaptureDeviceTypeBuiltInDualCamera,
-        ];
+        NSArray<AVCaptureDeviceType> *deviceTypes = [self getDeviceTypes:NO];
         AVCaptureDeviceDiscoverySession *discoverySession = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack];
         device = discoverySession.devices.firstObject;
         self.currentZoomLevel = 2.0;
@@ -662,6 +640,30 @@ parentViewController:(UIViewController*)parentViewController
     //        NSTimeInterval timeElapsed  = [NSDate timeIntervalSinceReferenceDate] - timeStart;
     //        NSLog(@"decoding completed in %dms", (int) (timeElapsed * 1000));
 
+}
+
+- (NSArray<AVCaptureDeviceType> *)getDeviceTypes:(BOOL)preferWideLens {
+    if (@available(iOS 13.0, *)) {
+         if (preferWideLens) {
+        return @[
+            AVCaptureDeviceTypeBuiltInUltraWideCamera, // ultra wide
+            AVCaptureDeviceTypeBuiltInWideAngleCamera,
+            AVCaptureDeviceTypeBuiltInTripleCamera,
+            AVCaptureDeviceTypeBuiltInDualWideCamera,
+            AVCaptureDeviceTypeBuiltInDualCamera,
+            ];
+        } else {
+            return @[
+                AVCaptureDeviceTypeBuiltInWideAngleCamera, // standard
+                AVCaptureDeviceTypeBuiltInTripleCamera,
+                AVCaptureDeviceTypeBuiltInDualWideCamera,
+                AVCaptureDeviceTypeBuiltInDualCamera,
+            ];
+        }
+    }
+    return @[
+        AVCaptureDeviceTypeBuiltInWideAngleCamera, // standard
+    ];
 }
 
 //--------------------------------------------------------------------------
