@@ -63,6 +63,7 @@ public class BarcodeScanner extends CordovaPlugin {
     private static final String SHOW_TORCH_BUTTON = "showTorchButton";
     private static final String TORCH_ON = "torchOn";
     private static final String ASSUME_GS1 = "assumeGS1";
+    private static final String ALSO_INVERTED = "alsoInverted";
     private static final String SAVE_HISTORY = "saveHistory";
     private static final String DISABLE_BEEP = "disableSuccessBeep";
     private static final String FORMATS = "formats";
@@ -197,7 +198,8 @@ public class BarcodeScanner extends CordovaPlugin {
                         intentScan.putExtra(Intents.Scan.SHOW_FLIP_CAMERA_BUTTON, obj.optBoolean(SHOW_FLIP_CAMERA_BUTTON, false));
                         intentScan.putExtra(Intents.Scan.SHOW_TORCH_BUTTON, obj.optBoolean(SHOW_TORCH_BUTTON, false));
                         intentScan.putExtra(Intents.Scan.TORCH_ON, obj.optBoolean(TORCH_ON, false));
-                        intentScan.putExtra("ASSUME_GS1", obj.optBoolean(ASSUME_GS1, false));
+                        intentScan.putExtra(Intents.Scan.ASSUME_GS1, obj.optBoolean(ASSUME_GS1, false));
+                        intentScan.putExtra(Intents.Scan.ALSO_INVERTED, obj.optBoolean(ALSO_INVERTED, false));
                         intentScan.putExtra(Intents.Scan.SAVE_HISTORY, obj.optBoolean(SAVE_HISTORY, false));
                         boolean beep = obj.optBoolean(DISABLE_BEEP, false);
                         boolean isContinuous = obj.optBoolean(CONTINUOUS_MODE, false);
