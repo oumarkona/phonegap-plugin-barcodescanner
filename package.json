@@ -15,6 +15,9 @@
     "type": "git",
     "url": "git+https://github.com/oumarkona/phonegap-plugin-barcodescanner.git"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/oumarkona"
+  }
   "keywords": [
     "ecosystem:cordova",
     "ecosystem:phonegap",
